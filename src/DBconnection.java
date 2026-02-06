@@ -9,9 +9,9 @@ public class DBconnection {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             con = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/login_db",
-                    "root",     // DB username
-                    "Java@123"     // DB password
+                    "jdbc:mysql://127.0.0.1:3306/login_schema",
+                    "root",
+                    "Java@123"
             );
         } catch (Exception e) {
             e.printStackTrace();
