@@ -9,33 +9,42 @@ public class Dashboard extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
         setLocationRelativeTo(null);
-        getContentPane().setBackground(new java.awt.Color(245, 245, 245));
+        getContentPane().setBackground(new Color(245, 245, 245));
 
+        // Welcome label at TOP
         JLabel welcomeLabel = new JLabel("Welcome, " + username);
-        welcomeLabel.setBounds(50, 100, 500, 50);
-        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        welcomeLabel.setBounds(0, 20, 600, 40);
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
+        // Edit Profile button
+        JButton editProfileBtn = new JButton("Edit Profile");
+        editProfileBtn.setBounds(230, 120, 140, 35);
+        editProfileBtn.setBackground(new Color(33, 150, 243));
+        editProfileBtn.setForeground(Color.WHITE);
+        editProfileBtn.setFocusPainted(false);
+
+        editProfileBtn.addActionListener(e -> {
+            new EditProfile(username);
+            dispose();
+        });
+
+        // Logout button
         JButton logoutBtn = new JButton("Logout");
-        logoutBtn.setBounds(250, 200, 100, 35);
-        logoutBtn.setBackground(new java.awt.Color(244, 67, 54));
+        logoutBtn.setBounds(250, 180, 100, 35);
+        logoutBtn.setBackground(new Color(244, 67, 54));
         logoutBtn.setForeground(Color.WHITE);
         logoutBtn.setFocusPainted(false);
 
-        // Hover effect
-        logoutBtn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                logoutBtn.setBackground(new java.awt.Color(211, 47, 47)); }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                logoutBtn.setBackground(new java.awt.Color(244, 67, 54)); }
+        logoutBtn.addActionListener(e -> {
+            new Login();
+            dispose();
         });
 
-        logoutBtn.addActionListener(e -> { new Login(); dispose(); });
-
         add(welcomeLabel);
+        add(editProfileBtn);
         add(logoutBtn);
+
         setVisible(true);
     }
-
 }
-

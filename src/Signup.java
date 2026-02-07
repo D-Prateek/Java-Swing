@@ -13,6 +13,11 @@ public class Signup extends JFrame {
     JPasswordField txtPass, txtConfirm;
     JButton signupBtn,signinBtn;
 
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        return email.matches(emailRegex);
+    }
+
     public Signup() {
         setTitle("Signup");
         setSize(600, 450);
@@ -94,16 +99,24 @@ public class Signup extends JFrame {
     }
 
     private void signupUser() {
-        String username = txtUser.getText();
-        String email = txtEmail.getText();
+        String username = txtUser.getText().trim();
+        String email = txtEmail.getText().trim();
         String password = String.valueOf(txtPass.getPassword());
         String confirm = String.valueOf(txtConfirm.getPassword());
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+        // Empty fields check
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirm.isEmpty()) {
             JOptionPane.showMessageDialog(this, "All fields are required");
             return;
         }
 
+        // Email format check
+        if (!isValidEmail(email)) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid email address");
+            return;
+        }
+
+        // Password match check
         if (!password.equals(confirm)) {
             JOptionPane.showMessageDialog(this, "Passwords do not match");
             return;
@@ -111,24 +124,42 @@ public class Signup extends JFrame {
 
         try {
             Connection con = DBconnection.getConnection();
+
+            // 🔍 Check username
+            PreparedStatement checkUser = con.prepareStatement(
+                    "SELECT * FROM users WHERE username = ?");
+            checkUser.setString(1, username);
+            if (checkUser.executeQuery().next()) {
+                JOptionPane.showMessageDialog(this, "Username already exists!");
+                return;
+            }
+
+            // 🔍 Check email
+            PreparedStatement checkEmail = con.prepareStatement(
+                    "SELECT * FROM users WHERE email = ?");
+            checkEmail.setString(1, email);
+            if (checkEmail.executeQuery().next()) {
+                JOptionPane.showMessageDialog(this, "Email already exists!");
+                return;
+            }
+
+
             String sql = "INSERT INTO users(username, email, password) VALUES(?,?,?)";
             PreparedStatement ps = con.prepareStatement(sql);
-
             ps.setString(1, username);
             ps.setString(2, email);
-            ps.setString(3, password); // (plain for now, can hash later)
+            ps.setString(3, password);
 
             ps.executeUpdate();
 
             JOptionPane.showMessageDialog(this, "Signup Successful!");
-
-
             new Login();
             dispose();
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error: Email already exists!");
+            JOptionPane.showMessageDialog(this, "Something went wrong. Try again!");
         }
     }
+
 }
