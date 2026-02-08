@@ -1,13 +1,13 @@
 import javax.swing.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.awt.*;
+import java.sql.*;
 
 public class EditProfile extends JFrame {
 
     JTextField txtUsername;
     JPasswordField txtPassword;
-    JButton saveBtn;
+    JButton saveBtn, backBtn;
+    JLabel usernameInfoLabel;
 
     String currentUsername;
 
@@ -18,6 +18,7 @@ public class EditProfile extends JFrame {
         setSize(500, 350);
         setLayout(null);
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JLabel lblUser = new JLabel("New Username:");
         JLabel lblPass = new JLabel("New Password:");
@@ -32,18 +33,72 @@ public class EditProfile extends JFrame {
         txtPassword.setBounds(200, 110, 200, 30);
 
         saveBtn = new JButton("Save Changes");
-        saveBtn.setBounds(180, 180, 140, 35);
-
+        saveBtn.setBounds(170, 170, 150, 35);
         saveBtn.addActionListener(e -> updateProfile());
+
+        backBtn = new JButton("Back");
+        backBtn.setBounds(170, 220, 150, 35);
+        backBtn.setBackground(new java.awt.Color(158, 158, 158));
+        backBtn.setForeground(java.awt.Color.WHITE);
+        backBtn.setFocusPainted(false);
+
+        usernameInfoLabel = new JLabel("");
+        usernameInfoLabel.setBounds(200, 90, 260, 20);
+        usernameInfoLabel.setForeground(Color.RED);
+        usernameInfoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        add(usernameInfoLabel);
+
+        checkUsernameChangeLimit();
+
+
+        backBtn.addActionListener(e -> {
+            new Dashboard(currentUsername);
+            dispose();
+        });
 
         add(lblUser);
         add(txtUsername);
         add(lblPass);
         add(txtPassword);
         add(saveBtn);
+        add(backBtn);
 
         setVisible(true);
     }
+
+    private void checkUsernameChangeLimit() {
+        try {
+            Connection con = DBconnection.getConnection();
+
+            PreparedStatement ps = con.prepareStatement(
+                    "SELECT last_username_change FROM users WHERE username = ?");
+            ps.setString(1, currentUsername);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next() && rs.getDate("last_username_change") != null) {
+
+                long lastChange = rs.getDate("last_username_change").getTime();
+                long now = System.currentTimeMillis();
+
+                long daysPassed = (now - lastChange) / (1000 * 60 * 60 * 24);
+
+                if (daysPassed < 30) {
+                    long daysLeft = 30 - daysPassed;
+
+                    txtUsername.setEnabled(false);
+
+                    usernameInfoLabel.setText(
+                            "You can change username again in " + daysLeft + " day(s)");
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     private void updateProfile() {
         String newUsername = txtUsername.getText().trim();
@@ -52,7 +107,6 @@ public class EditProfile extends JFrame {
         try {
             Connection con = DBconnection.getConnection();
 
-            // 1️⃣ Check last username change
             PreparedStatement psDate = con.prepareStatement(
                     "SELECT last_username_change FROM users WHERE username = ?");
             psDate.setString(1, currentUsername);
@@ -70,17 +124,23 @@ public class EditProfile extends JFrame {
                 }
             }
 
-            // 2️⃣ Check if username exists
             PreparedStatement checkUser = con.prepareStatement(
                     "SELECT * FROM users WHERE username = ?");
             checkUser.setString(1, newUsername);
+
+            if (!txtUsername.isEnabled()) {
+                JOptionPane.showMessageDialog(this,
+                        "Username change is currently locked.");
+                return;
+            }
+
+
             if (checkUser.executeQuery().next()) {
                 JOptionPane.showMessageDialog(this,
                         "Username already exists!");
                 return;
             }
 
-            // 3️⃣ Update username & password
             PreparedStatement update = con.prepareStatement(
                     "UPDATE users SET username=?, password=?, last_username_change=CURDATE() WHERE username=?");
 
